@@ -61,6 +61,7 @@ services:
   db:
     container_name: db
     image: postgres:16.9
+    restart: always
     environment:
       POSTGRES_DB: challenge
       POSTGRES_USER: spring
@@ -88,10 +89,11 @@ services:
           RUN chmod +x gradlew
           RUN ./gradlew clean bootJar --info --stacktrace --no-daemon
 
-          FROM ibm-semeru-runtimes:open-21-jdk-jammy
+          FROM eclipse-temurin:21-jdk-alpine
           WORKDIR /app
           COPY --from=builder /app/build/libs/*.jar app.jar
           ENTRYPOINT ["java", "-jar", "app.jar"]
+    image: local/batch-sale:latest
     depends_on:
       - db
     environment:
@@ -101,6 +103,33 @@ services:
       APP_DB_USERNAME: spring
       APP_DB_PASSWORD: 1234
     volumes:
-      - ./input:/input
+      - ./csv:/csv
+      - bsdata:/tmp/bsdata
+
+  csv-generator:
+    container_name: csv-generator
+    build:
+      context: .
+      additional_contexts:
+        source: https://github.com/jpdr-portfolio/csv.generator.git
+      dockerfile_inline: |
+          FROM gradle:8.14-jdk21-ubi-minimal AS builder
+          WORKDIR /app
+
+          COPY --from=source . .
+
+          RUN chmod +x gradlew
+          RUN ./gradlew clean jar --info --stacktrace --no-daemon
+
+          FROM eclipse-temurin:21-jdk-alpine
+          WORKDIR /app
+          COPY --from=builder /app/build/libs/*.jar app.jar
+          ENTRYPOINT ["java", "-jar", "app.jar"]
+    image: local/csv-generator:latest
+    environment:
+      APP_DIR: /csv
+    volumes:
+      - ./csv:/csv
 volumes:
   pgdata:
+  bsdata:
