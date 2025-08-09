@@ -1,0 +1,106 @@
+name: challenge_jpdr
+services:
+  init-sql:
+    image: busybox
+    volumes:
+      - ./sql:/sql
+    command: >
+      sh -c "printf '
+      \\n
+      \\nCREATE TABLE IF NOT EXISTS public.sales_master
+      \\n(
+      \\n    master_id serial PRIMARY KEY,
+      \\n    file_name character varying COLLATE pg_catalog."default" NOT NULL,
+      \\n    creation_timestamp time with time zone NOT NULL,
+      \\n    status character varying COLLATE pg_catalog."default" NOT NULL,
+      \\n    update_timestamp time with time zone      
+      \\n)
+      \\n
+      \\nTABLESPACE pg_default;
+      \\n
+      \\nALTER TABLE IF EXISTS public.sales_master
+      \\n    OWNER to spring;
+      \\n
+      \\n
+      \\nCREATE TABLE IF NOT EXISTS public.sales_details
+      \\n(
+      \\n    master_id integer NOT NULL,
+      \\n    details_id bigint NOT NULL,
+      \\n    point_of_sale integer NOT NULL,
+      \\n    amount numeric(15,2) NOT NULL,
+      \\n    quantity integer NOT NULL,
+      \\n    taxes numeric(15,2) NOT NULL,
+      \\n    customer_id integer NOT NULL,
+      \\n    product_id uuid NOT NULL,
+      \\n    creation_timestamp time with time zone NOT NULL
+      \\n)
+      \\n
+      \\nTABLESPACE pg_default;
+      \\n
+      \\nALTER TABLE IF EXISTS public.sales_details
+      \\n    OWNER to spring;
+      \\n
+      \\nCREATE INDEX IF NOT EXISTS ix_sales_details
+      \\n    ON public.sales_details USING btree
+      \\n    (master_id ASC NULLS LAST, details_id ASC NULLS LAST)
+      \\n    TABLESPACE pg_default;
+      \\nCREATE SEQUENCE IF NOT EXISTS public.sales_master_id_seq
+      \\n    INCREMENT 1
+      \\n    START 1
+      \\n    MINVALUE 1
+      \\n    MAXVALUE 2147483647
+      \\n    CACHE 1;
+      \\n
+      \\nALTER SEQUENCE public.sales_master_id_seq
+      \\n    OWNED BY public.sales_master.master_id;
+      \\n
+      \\nALTER SEQUENCE public.sales_master_id_seq
+      \\n    OWNER TO spring;'
+      > /sql/init.sql"
+
+  db:
+    container_name: db
+    image: postgres:16.9
+    environment:
+      POSTGRES_DB: challenge
+      POSTGRES_USER: spring
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    depends_on:
+      - init-sql
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+
+  batch-sale:
+    container_name: batch-sale
+    build:
+      context: .
+      additional_contexts:
+        source: https://github.com/jpdr-portfolio/batch.sale.git
+      dockerfile_inline: |
+          FROM gradle:8.14-jdk21-ubi-minimal AS builder
+          WORKDIR /app
+
+          COPY --from=source . .
+
+          RUN chmod +x gradlew
+          RUN ./gradlew clean bootJar --info --stacktrace --no-daemon
+
+          FROM ibm-semeru-runtimes:open-21-jdk-jammy
+          WORKDIR /app
+          COPY --from=builder /app/build/libs/*.jar app.jar
+          ENTRYPOINT ["java", "-jar", "app.jar"]
+    depends_on:
+      - db
+    environment:
+      APP_LOG_LEVEL: INFO
+      APP_DB_URL: db:5432
+      APP_DB_NAME: challenge
+      APP_DB_USERNAME: spring
+      APP_DB_PASSWORD: 1234
+    volumes:
+      - ./input:/input
+volumes:
+  pgdata:
