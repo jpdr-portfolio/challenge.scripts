@@ -1,9 +1,42 @@
-# Scripts del challenge
+# Challenge   
 ## Repositorios
 
 - https://github.com/jpdr-portfolio/challenge.scripts : este repo
 - https://github.com/jpdr-portfolio/csv.generator : Generador de archivos CSV con valores aleatorios.
 - https://github.com/jpdr-portfolio/batch.sale : Procesador Batch del CSV y carga en Tabla Postgres (challenge)
+
+## Detalles del desarrollo
+
+- Java 21, Spring Boot, Spring Batch, Spring Data JCBC y JPA.
+- Base de datos: Postgres
+- Los nombres en toda la solución estan en idioma ingles.
+- Datos: Por cada archivo CSV, el procesador llamado __'batch.sale'__ registra el archivo en una tabla llamada 'sales_master'. Luego procesa el archivo insertando en la tabla 'sales_details'. Cuando finaliza actualiza el registro de la tabla 'sales_master'.
+  - Entrada
+    - Campos Archivo CSV:  
+      - Id de registro (id)
+      - Punto de Venta (pointOfSale)
+      - Monto (amount)
+      - Cantidad (quantity)
+      - Temperatura (temperature)
+      - Id de Cliente (customerId) (dato tipo Entero inventado para agregar volumen) 
+      - Id de Producto (productId) (dato tipo UUID inventado para agregar volumen)
+  - Salida
+    - Campos Tabla sales_master (tabla que uso para identificar los registros de una carga determinada)
+      - master_id (id que relaciona este archivo con los registros de la tabla sales_details)
+      - file_name (nombre del archivo procesado)
+      - creation_timestamp (timestamp de inicio del proceso)
+      - status (estado PENDING o COMPLETED)
+      - update_timestamp (timestamp de fin del proceso)   
+    - Campos Tabla sales_details (tabla con los datos del CSV procesados)
+      - master_id (id de la tabla sales_master)
+      - details_id (id del registro en el CSV)
+      - point_of_sale (punto de venta)
+      - amount (monto)
+      - quantity (cantidad)
+      - taxes (monto x el impuesto que aplique al punto de venta)
+      - customer_id (id del cliente)
+      - product_id (id del producto)
+      - creation_timestamp (timpestamp de generacion del registro)
 
 ## Instrucciones
 
@@ -18,13 +51,10 @@
   Las imagenes ocupan sumadas unos 1.2 GB en total.   
   El volumen de Postgres aumenta en tamaño en cada ejecución.
 
-## Componentes de stack (ir directo a [Pruebas](#pruebas) si el tiempo apremia)
+## Componentes (ir directo a [Pruebas](#pruebas) si el tiempo apremia)
 
-
-
-
-### Generador
-- El generador tiene estos argunmentos:
+### Generador __'csv.generator'__
+- El generador tiene estos argumentos:
   - Cantidad de registros (obligatorio)
   - Nombre del archivo a generar (opcional)
 - Generará 2 archivos:
@@ -53,7 +83,7 @@
 
 
 
-### Procesador
+### Procesador __'batch.sale'__
 El procesador toma como argumento el nombre del archivo CSV.
 - Tiene espejada la carpeta ./csv
 - También tiene definido el volumen interno /tmp/bsdata
