@@ -46,10 +46,10 @@ Se utiliza Docker Compose para generar el entorno para poder correrlo localmente
 - Clonar este repo:
   
   `git clone https://github.com/jpdr-portfolio/challenge.scripts.git`
-- Dentro de la carpeta ejecutar
+- Dentro de la carpeta `challenge.scripts` ejecutar
   
   `create.bat`
-- Se generará un stack en Docker con una instancia de Postgres, el Generador de CSV y el Procesador (la consigna del challenge).   
+- Se generará un stack en Docker con una instancia de Postgres, el Generador de CSV 'csv.generator' y el Procesador 'batch.sale' (la consigna del challenge).   
   Debería tardar 1:30 - 2:00 min.   
   Las imagenes ocupan sumadas unos 1.2 GB en total.   
   El volumen de Postgres aumenta en tamaño en cada ejecución.
