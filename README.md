@@ -49,8 +49,8 @@ Se utiliza Docker Compose para generar el entorno para poder correrlo localmente
 - Dentro de la carpeta `challenge.scripts` ejecutar
   
   `create.bat`
-- Se generará un stack en Docker con una instancia de Postgres, el Generador de CSV 'csv.generator' y el Procesador 'batch.sale' (la consigna del challenge).   
-  Debería tardar 1:30 - 2:00 min.   
+- Se generará un stack en Docker con una instancia de Postgres, el Generador de CSV __'csv.generator'__ y el Procesador __'batch.sale'__ (la consigna del challenge).   
+  Debería tardar 1:30 - 3:00 min.   
   Las imagenes ocupan sumadas unos 1.2 GB en total.   
   El volumen de Postgres aumenta en tamaño en cada ejecución.
 
@@ -105,7 +105,14 @@ La opcion 3 tiene demora en la copia a Docker desde /csv a /tmp/bsdata.
 
 
 
-## :chart_with_upwards_trend: Pruebas
+## :chart_with_upwards_trend: Pruebas   
+
+Los tiempos de ejecución varian en funcion de donde se hagan las operaciones de lectura/escritura del archivo CSV principalmente.   
+
+- Volumen interno de docker montado como /tmp/bsdata
+- Volumen compartido con host en /csv
+
+El volumen interno ofrece tiempos muy superiores al compartido.
 
 ### Opcion: Generacion y lectura interna en Docker /tmp/bsdata   
 
