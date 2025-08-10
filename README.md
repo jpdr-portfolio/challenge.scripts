@@ -92,12 +92,11 @@ El procesador toma como argumento el nombre del archivo CSV.
 - También tiene definido el volumen interno /tmp/bsdata
 
 Entonces, para disponiblizarle el archivo al procesador:   
-- Opcion 1: Se puede pasar un archivo directamente generado en /tmp/bsdata
-- Opcion 2: Copiar el archivo generado en /csv a /tmp/bsdata, y luego idem 1. 
-- Opcion 3: Se puede pasar un archivo directamente generado en /csv.  
+- Opcion 1: Generar y Procesar archivo en volumen interno /tmp/bsdata.
+- Opcion 2: Generar y Procesar archivo en volumen compartido /csv.
+- Opcion 3: Generar archivo en volumen compartido /csv, copiarlo a /tmp/bsdata y Procesar desde el volumen interno.
     
-Es preferible usar la __Opcion 1__, porque la 3 agrega latencia de I/O al estar el volumen 'fuera' de Docker, y por ende tarda más el Generador y el Procesador.   
-La opcion 3 tiene demora en la copia a Docker desde /csv a /tmp/bsdata.
+Para evaluar performance del procesador, creo que es preferible usar la __Opcion 1__, porque la escritura y lectura del CSV se hace toda en el volumen interno, que es mas rapido.
 
 ##### Ejemplo de comando de ejecucion:
 `docker compose run --rm batch-sale csvSalesFileName=/tmp/bsdata/lote.csv`
@@ -114,7 +113,7 @@ Los tiempos de ejecución varian en funcion de donde se hagan las operaciones de
 
 El volumen interno ofrece tiempos muy superiores al compartido.
 
-### Opcion: Generacion y lectura interna en Docker /tmp/bsdata   
+### Opcion: Generacion y lectura en volumen interno /tmp/bsdata (con outputs de ejemplo)
 
 Ejecutar estos comandos para probar con un archivo 'lote.csv' de 10.000.000 registros.
 
@@ -232,8 +231,36 @@ _Indica que la ejecución del Job termino bien y duró 16 minutos aprox._
 
   _Se puede ver que los totales del CSV y los totales de la tabla coinciden._
 
+### Opcion: Generacion y lectura en volumen montado /csv
 
-### Opcion: Generacion volumen montado /csv, subir a Docker y lectura interna en Docker /tmp/bsdata      
+Ejecutar estos comandos para probar con un archivo 'lote.csv' de 10.000.000 registros.   
+
+- Generar archivo
+    
+`docker compose run --rm csv-generator 10000000 /csv/lote.csv`   
+
+- Procesar archivo   
+  
+`docker compose run --rm batch-sale csvSalesFileName=/csv/lote.csv`
+
+- Generar control contra BD   
+  - (CMD)   
+`docker compose exec db psql -U spring -d challenge -t -A -F"|" -c "select count(1),sum(amount),sum(quantity) from public.sales_details where master_id = ( select max(master_id) from public.sales_master where status = 'COMPLETED' ) group by master_id"  > ./csv/lote.db.control 2>&1`   
+  - (PS|BASH)   
+`docker compose exec db psql -U spring -d challenge -t -A -F'|' -c "select count(1),sum(amount),sum(quantity) from public.sales_details where master_id = ( select max(master_id) from public.sales_master where status = 'COMPLETED' ) group by master_id"  > ./csv/lote.db.control 2>&1`
+
+- Comparar visualmente totales de control CSV vs counts,sums de bd   
+ (controlar que estos dos archivos sean iguales):   
+  - (CMD)   
+`type .\csv\lote.csv.control`  
+`type .\csv\lote.db.control`   
+  - (PS|BASH)   
+`type ./csv/lote.csv.control`  
+`type ./csv/lote.db.control`
+
+
+
+### Opcion 3: Generación en volumen montado /csv, subir a volumen interno /tmp/bsdata y procesar.
 
 Ejecutar estos comandos para probar con un archivo 'lote.csv' de 10.000.000 registros.   
 
