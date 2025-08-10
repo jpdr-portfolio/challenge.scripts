@@ -7,10 +7,12 @@
 
 ## :page_with_curl: Detalles del desarrollo
 
-- Java 21, Spring Boot, Spring Batch, Spring Data JCBC y JPA.
-- Base de datos: Postgres
-- Los nombres en toda la solución estan en idioma ingles.
-- Se requiere Docker para poder armar el ambiente mediante docker-compose.
+- Java 21
+- Spring Boot, Spring Batch, Spring Data JCBC y JPA
+- Builds con Gradle
+- Base de datos PostgreSQL 16.
+- Los nombres en toda la solución estan en idioma ingles
+- Se requiere Docker (Desktop) para poder desplegar el ambiente mediante docker-compose
 - Datos: Por cada archivo CSV, el procesador llamado __'batch.sale'__ registra el archivo en una tabla llamada 'sales_master'. Luego procesa el archivo insertando en la tabla 'sales_details'. Cuando finaliza actualiza el registro de la tabla 'sales_master'.
   - Entrada
     - Campos Archivo CSV:  
