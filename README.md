@@ -113,7 +113,7 @@ Los tiempos de ejecución varian en funcion de donde se hagan las operaciones de
 
 El volumen interno ofrece tiempos muy superiores al compartido.
 
-### Opcion: Generacion y lectura en volumen interno /tmp/bsdata (con outputs de ejemplo)
+### Opcion 1: Generacion y lectura en volumen interno /tmp/bsdata (con outputs de ejemplo)
 
 Ejecutar estos comandos para probar con un archivo 'lote.csv' de 10.000.000 registros.
 
@@ -231,7 +231,7 @@ _Indica que la ejecución del Job termino bien y duró 16 minutos aprox._
 
   _Se puede ver que los totales del CSV y los totales de la tabla coinciden._
 
-### Opcion: Generacion y lectura en volumen montado /csv
+### Opcion 2: Generacion y lectura en volumen montado /csv
 
 Ejecutar estos comandos para probar con un archivo 'lote.csv' de 10.000.000 registros.   
 
